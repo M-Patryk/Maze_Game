@@ -1,4 +1,4 @@
-console.log(Matter);
+// console.log(Matter);
 const { Engine, Render, World, Bodies, Runner, MouseConstraint, Mouse } = Matter;
 // Engine - transition from a current state of our entire world into some new state
 // Render - draw all the stuff on the  screen
@@ -52,39 +52,47 @@ const horizontals = Array(cells - 1).fill(null).map(() => Array(cells).fill(fals
 const startRow = Math.floor(Math.random() * cells);
 const startColumn = Math.floor(Math.random() * cells);
 
-const stepTroughtCell = (row, column) => {
+const stepThroughCell = (row, column) => {
 	//If i have visited the cell at [row, column] then return
-	if (grid[row][column] === true) {
+	if (grid[row][column]) {
 		return;
 	}
 	//Mark this cell as being visited
 	grid[row][column] = true;
 	//Assemble randomly-ordered list of neighbours
-	let neighbours = shuffle([
+	const neighbours = shuffle([
 		[ row - 1, column, 'up' ], //check up
 		[ row + 1, column, 'down' ], //check down
 		[ row, column - 1, 'left' ], //check left
 		[ row, column + 1, 'right' ] //check right
 	]);
-	console.log(neighbours);
-
 	//For each neighbour....
-	for(let neighbour of neighbours){
-		const [nextRow, nextColumn, direction] = neighbour
+	for (let neighbour of neighbours) {
+		const [ nextRow, nextColumn, direction ] = neighbour;
+		
 		//Check if that neighbour is out of bonds
-		if(nextRow < 0 || nextRow >= cells || nextColumn < 0 || nextColumn >= cells){
+		if (nextRow < 0 || nextRow >= cells || nextColumn < 0 || nextColumn >= cells) {
 			continue;
 		}
 		//If I have visited that neighbour, continue to the next neighbour
-		if(grid[nextRow][nextColumn] === true){
+		if (grid[nextRow][nextColumn]) {
 			continue;
 		}
-		//Remove a wall from either horizontals or verticals
-		//I have to decide where i go
-
+		//Remove a wall from either horizontals or verticals/
+	if (direction === 'left') {
+		verticals[row][column - 1] = true;
+	} else if (direction === 'right') {
+		verticals[row][column] = true;
+	} else if (direction === 'up') {
+		horizontals[row - 1][column] = true;
+	} else if (direction === 'down') {
+		horizontals[row][column] = true;
 	}
-
-
+	stepThroughCell(nextRow, nextColumn)
+}
+	//I have to decide where i go
 };
 
-stepTroughtCell(startRow, startColumn);
+
+stepThroughCell(startRow, startColumn);
+
