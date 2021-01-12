@@ -8,16 +8,18 @@ const { Engine, Render, World, Bodies, Runner, MouseConstraint, Mouse } = Matter
 const engine = Engine.create();
 const { world } = engine;
 
-const cells = 3;
+const cells = 20;
 const height = 600;
 const width = 600;
+const unitLength = width / cells;
+
 const render = Render.create({
 	// Inside of here I want to tell the render where I want to show my representation of everything inside of my HTML doc
 	// Element is doc.body || So "go to render, the representation of world inside of doc.body"
 	element : document.body,
 	engine  : engine,
 	options : {
-		wireframes : false,
+		wireframes : true,
 		width,
 		height
 	}
@@ -27,13 +29,13 @@ Render.run(render);
 Runner.run(Runner.create(), engine);
 
 //Walls
-const walls = [
-	Bodies.rectangle(width / 2, 0, width, 40, { isStatic: true }), //Top wall
-	Bodies.rectangle(width / 2, height, width, 40, { isStatic: true }), //Bottom wall
-	Bodies.rectangle(0, height / 2, height, 40, { isStatic: true, angle: 1.5707963268 }),
-	Bodies.rectangle(width, height / 2, height, 40, { isStatic: true, angle: 1.5707963268 })
-];
-World.add(world, walls);
+// const walls = [
+// 	Bodies.rectangle(width / 2, 0, width, 40, { isStatic: true }), //Top wall
+// 	Bodies.rectangle(width / 2, height, width, 40, { isStatic: true }), //Bottom wall
+// 	Bodies.rectangle(0, height / 2, height, 40, { isStatic: true, angle: 1.5707963268 }),
+// 	Bodies.rectangle(width, height / 2, height, 40, { isStatic: true, angle: 1.5707963268 })
+// ];
+// World.add(world, walls);
 
 function shuffle(array) {
 	for (let i = array.length - 1; i > 0; i--) {
@@ -69,7 +71,7 @@ const stepThroughCell = (row, column) => {
 	//For each neighbour....
 	for (let neighbour of neighbours) {
 		const [ nextRow, nextColumn, direction ] = neighbour;
-		
+
 		//Check if that neighbour is out of bonds
 		if (nextRow < 0 || nextRow >= cells || nextColumn < 0 || nextColumn >= cells) {
 			continue;
@@ -79,20 +81,53 @@ const stepThroughCell = (row, column) => {
 			continue;
 		}
 		//Remove a wall from either horizontals or verticals/
-	if (direction === 'left') {
-		verticals[row][column - 1] = true;
-	} else if (direction === 'right') {
-		verticals[row][column] = true;
-	} else if (direction === 'up') {
-		horizontals[row - 1][column] = true;
-	} else if (direction === 'down') {
-		horizontals[row][column] = true;
+		if (direction === 'left') {
+			verticals[row][column - 1] = true;
+		} else if (direction === 'right') {
+			verticals[row][column] = true;
+		} else if (direction === 'up') {
+			horizontals[row - 1][column] = true;
+		} else if (direction === 'down') {
+			horizontals[row][column] = true;
+		}
+		stepThroughCell(nextRow, nextColumn);
 	}
-	stepThroughCell(nextRow, nextColumn)
-}
 	//I have to decide where i go
 };
 
-
 stepThroughCell(startRow, startColumn);
 
+horizontals.forEach((row, rowIndex) => {
+	row.forEach((open, columnIndex) => {
+		if (open === true) {
+			//Jesli jest to otwarty segment (nie ma sciany) to nie rob nic
+			return;
+		}
+		const wall = Bodies.rectangle(
+			//1st and 2nd args are x/y of the center of rectangle and 3rd & 4th are width and height
+			columnIndex * unitLength + unitLength / 2,
+			rowIndex * unitLength + unitLength,
+			unitLength,
+			5,
+			{isStatic: true}
+		);
+			World.add(world, wall)
+		
+	});
+});
+
+verticals.forEach((row, rowIndex) => {
+	row.forEach((open, columnIndex) => {
+		if(open === true){
+			return;
+		}
+		const wall = Bodies.rectangle(
+			columnIndex * unitLength + unitLength,
+			rowIndex * unitLength + unitLength / 2,
+			5,
+			unitLength,
+			{isStatic: true}
+		)
+		World.add(world, wall)
+	})
+})
