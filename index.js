@@ -1,14 +1,16 @@
 // console.log(Matter);
-const { Engine, Render, World, Bodies, Runner, MouseConstraint, Mouse } = Matter;
+const { Engine, Render, World, Bodies, Runner, MouseConstraint, Mouse, Body, Events } = Matter;
 // Engine - transition from a current state of our entire world into some new state
 // Render - draw all the stuff on the  screen
 // Runner - coordinates updates all the states between the engine and the world
 // Bodies - collection of the the different shapes
 // MouseConstraint - Mouse input
 const engine = Engine.create();
+engine.world.gravity.y = 0;
+engine.world.gravity.x = 0;
 const { world } = engine;
 
-const cells = 20;
+const cells = 5;
 const height = 600;
 const width = 600;
 const unitLength = width / cells;
@@ -29,13 +31,13 @@ Render.run(render);
 Runner.run(Runner.create(), engine);
 
 //Walls
-// const walls = [
-// 	Bodies.rectangle(width / 2, 0, width, 40, { isStatic: true }), //Top wall
-// 	Bodies.rectangle(width / 2, height, width, 40, { isStatic: true }), //Bottom wall
-// 	Bodies.rectangle(0, height / 2, height, 40, { isStatic: true, angle: 1.5707963268 }),
-// 	Bodies.rectangle(width, height / 2, height, 40, { isStatic: true, angle: 1.5707963268 })
-// ];
-// World.add(world, walls);
+const walls = [
+	Bodies.rectangle(width / 2, 0, width, 10, { isStatic: true }), //Top wall
+	Bodies.rectangle(width / 2, height, width, 10, { isStatic: true }), //Bottom wall
+	Bodies.rectangle(0, height / 2, height, 10, { isStatic: true, angle: 1.5707963268 }),
+	Bodies.rectangle(width, height / 2, height, 10, { isStatic: true, angle: 1.5707963268 })
+];
+World.add(world, walls);
 
 function shuffle(array) {
 	for (let i = array.length - 1; i > 0; i--) {
@@ -109,16 +111,15 @@ horizontals.forEach((row, rowIndex) => {
 			rowIndex * unitLength + unitLength,
 			unitLength,
 			5,
-			{isStatic: true}
+			{ isStatic: true }
 		);
-			World.add(world, wall)
-		
+		World.add(world, wall);
 	});
 });
 
 verticals.forEach((row, rowIndex) => {
 	row.forEach((open, columnIndex) => {
-		if(open === true){
+		if (open === true) {
 			return;
 		}
 		const wall = Bodies.rectangle(
@@ -126,8 +127,56 @@ verticals.forEach((row, rowIndex) => {
 			rowIndex * unitLength + unitLength / 2,
 			5,
 			unitLength,
-			{isStatic: true}
-		)
-		World.add(world, wall)
-	})
-})
+			{ isStatic: true }
+		);
+		World.add(world, wall);
+	});
+});
+
+//Goal
+const meta = Bodies.rectangle(
+	unitLength * (cells - 1) + unitLength / 2,
+	unitLength * (cells - 1) + unitLength / 2,
+	unitLength / 2,
+	unitLength / 2,
+	{ isStatic: true }
+);
+World.add(world, meta);
+
+//Start
+const ball = Bodies.circle(unitLength / 2, unitLength / 2, unitLength / 4);
+
+World.add(world, ball);
+
+//Ball movement
+document.addEventListener('keydown', (event) => {
+	const { x, y } = ball.velocity;
+	if (event.key === 'w') {
+		if (cells > 15) {
+			Body.setVelocity(ball, { x, y: y - 5 });
+		} else {
+			Body.setVelocity(ball, { x, y: y - 10 });
+		}
+	}
+	if (event.key === 's') {
+		if (cells > 15) {
+			Body.setVelocity(ball, { x, y: y + 5 });
+		} else {
+			Body.setVelocity(ball, { x, y: y + 10 });
+		}
+	}
+	if (event.key === 'a') {
+		if (cells > 15) {
+			Body.setVelocity(ball, { x: x - 5, y });
+		} else {
+			Body.setVelocity(ball, { x: x - 10, y });
+		}
+	}
+	if (event.key === 'd') {
+		if (cells > 15) {
+			Body.setVelocity(ball, { x: x + 5, y });
+		} else {
+			Body.setVelocity(ball, { x: x + 10, y });
+		}
+	}
+});
