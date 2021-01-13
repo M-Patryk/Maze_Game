@@ -10,8 +10,8 @@ engine.world.gravity.y = 0;
 engine.world.gravity.x = 0;
 const { world } = engine;
 
-const cellsHorizontal = 14;
-const cellsVertical = 13;
+const cellsHorizontal = 7;
+const cellsVertical = 6;
 const height = window.innerHeight - 4;
 const width = window.innerWidth - 2;
 
@@ -117,8 +117,8 @@ horizontals.forEach((row, rowIndex) => {
 			{
 				isStatic : true,
 				label    : 'wall',
-				render: {
-					fillStyle: 'darkblue'
+				render   : {
+					fillStyle : 'darkblue'
 				}
 			}
 		);
@@ -139,8 +139,8 @@ verticals.forEach((row, rowIndex) => {
 			{
 				isStatic : true,
 				label    : 'wall',
-				render: {
-					fillStyle: 'darkblue'
+				render   : {
+					fillStyle : 'darkblue'
 				}
 			}
 		);
@@ -150,17 +150,20 @@ verticals.forEach((row, rowIndex) => {
 
 //Goal
 const meta = Bodies.rectangle(width - unitLengthX / 2, height - unitLengthY / 2, unitLengthX / 2, unitLengthY / 2, {
-	isStatic: true,
-	label: 'goal',
-	render: {
-		fillStyle: 'red'
+	isStatic : true,
+	label    : 'goal',
+	render   : {
+		fillStyle : 'red'
 	}
 });
 World.add(world, meta);
 
 //Start
 const ballRadius = Math.min(unitLengthX, unitLengthY) / 4;
-const ball = Bodies.circle(unitLengthX / 2, unitLengthY / 2, ballRadius, { label: 'ball', render: {fillStyle: 'yellow'} });
+const ball = Bodies.circle(unitLengthX / 2, unitLengthY / 2, ballRadius, {
+	label: 'ball',
+	render: { fillStyle: 'yellow' }
+});
 
 World.add(world, ball);
 
@@ -202,6 +205,7 @@ Events.on(engine, 'collisionStart', (event) => {
 	event.pairs.forEach((collision) => {
 		const labels = [ 'ball', 'goal' ];
 		if (labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)) {
+			document.querySelector('.winner').classList.remove('hidden');
 			world.gravity.y = 1;
 			world.bodies.forEach((body) => {
 				if (body.label === 'wall') {
