@@ -10,10 +10,13 @@ engine.world.gravity.y = 0;
 engine.world.gravity.x = 0;
 const { world } = engine;
 
-const cells = 30;
+const cellsHorizontal = 14;
+const cellsVertical = 13;
 const height = window.innerHeight - 4;
 const width = window.innerWidth - 2;
-const unitLength = width / cells;
+
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = height / cellsVertical;
 
 const render = Render.create({
 	// Inside of here I want to tell the render where I want to show my representation of everything inside of my HTML doc
@@ -47,14 +50,14 @@ function shuffle(array) {
 	return array;
 }
 
-const grid = Array(cells).fill(null).map(() => Array(cells).fill(false)); //.fill uzupelnia wszystkie elementy w tablicy zaczynajac od indexu 0
+const grid = Array(cellsVertical).fill(null).map(() => Array(cellsHorizontal).fill(false)); //.fill uzupelnia wszystkie elementy w tablicy zaczynajac od indexu 0
 //Tworzy tablice od dlugosci cells i kazdy element po kolei mapuje jako nowa tablica o dlugosci cells i jej kazdy element ma wartosc false
 
-const verticals = Array(cells).fill(null).map(() => Array(cells - 1).fill(false));
-const horizontals = Array(cells - 1).fill(null).map(() => Array(cells).fill(false));
+const verticals = Array(cellsVertical).fill(null).map(() => Array(cellsHorizontal - 1).fill(false));
+const horizontals = Array(cellsVertical - 1).fill(null).map(() => Array(cellsHorizontal).fill(false));
 
-const startRow = Math.floor(Math.random() * cells);
-const startColumn = Math.floor(Math.random() * cells);
+const startRow = Math.floor(Math.random() * cellsVertical);
+const startColumn = Math.floor(Math.random() * cellsHorizontal);
 
 const stepThroughCell = (row, column) => {
 	//If i have visited the cell at [row, column] then return
@@ -75,7 +78,7 @@ const stepThroughCell = (row, column) => {
 		const [ nextRow, nextColumn, direction ] = neighbour;
 
 		//Check if that neighbour is out of bonds
-		if (nextRow < 0 || nextRow >= cells || nextColumn < 0 || nextColumn >= cells) {
+		if (nextRow < 0 || nextRow >= cellsVertical || nextColumn < 0 || nextColumn >= cellsHorizontal) {
 			continue;
 		}
 		//If I have visited that neighbour, continue to the next neighbour
@@ -107,12 +110,14 @@ horizontals.forEach((row, rowIndex) => {
 		}
 		const wall = Bodies.rectangle(
 			//1st and 2nd args are x/y of the center of rectangle and 3rd & 4th are width and height
-			columnIndex * unitLength + unitLength / 2,
-			rowIndex * unitLength + unitLength,
-			unitLength,
+			columnIndex * unitLengthX + unitLengthX / 2,
+			rowIndex * unitLengthY + unitLengthY,
+			unitLengthX,
 			5,
-			{ isStatic: true,
-			label: 'wall' }
+			{
+				isStatic : true,
+				label    : 'wall'
+			}
 		);
 		World.add(world, wall);
 	});
@@ -124,29 +129,29 @@ verticals.forEach((row, rowIndex) => {
 			return;
 		}
 		const wall = Bodies.rectangle(
-			columnIndex * unitLength + unitLength,
-			rowIndex * unitLength + unitLength / 2,
+			columnIndex * unitLengthX + unitLengthX,
+			rowIndex * unitLengthY + unitLengthY / 2,
 			5,
-			unitLength,
-			{ isStatic: true,
-			label: 'wall' }
+			unitLengthY,
+			{
+				isStatic : true,
+				label    : 'wall'
+			}
 		);
 		World.add(world, wall);
 	});
 });
 
 //Goal
-const meta = Bodies.rectangle(
-	unitLength * (cells - 1) + unitLength / 2,
-	unitLength * (cells - 1) + unitLength / 2,
-	unitLength / 2,
-	unitLength / 2,
-	{ isStatic: true, label: 'goal' }
-);
+const meta = Bodies.rectangle(width - unitLengthX / 2, height - unitLengthY / 2, unitLengthX / 2, unitLengthY / 2, {
+	isStatic: true,
+	label: 'goal'
+});
 World.add(world, meta);
 
 //Start
-const ball = Bodies.circle(unitLength / 2, unitLength / 2, unitLength / 4, {label: 'ball'});
+const ballRadius = Math.min(unitLengthX, unitLengthY) / 4;
+const ball = Bodies.circle(unitLengthX / 2, unitLengthY / 2, ballRadius, { label: 'ball' });
 
 World.add(world, ball);
 
@@ -154,28 +159,28 @@ World.add(world, ball);
 document.addEventListener('keydown', (event) => {
 	const { x, y } = ball.velocity;
 	if (event.key === 'w') {
-		if (cells > 15) {
+		if (cellsVertical > 15) {
 			Body.setVelocity(ball, { x, y: y - 2 });
 		} else {
 			Body.setVelocity(ball, { x, y: y - 10 });
 		}
 	}
 	if (event.key === 's') {
-		if (cells > 15) {
+		if (cellsVertical > 15) {
 			Body.setVelocity(ball, { x, y: y + 2 });
 		} else {
 			Body.setVelocity(ball, { x, y: y + 10 });
 		}
 	}
 	if (event.key === 'a') {
-		if (cells > 15) {
+		if (cellsVertical > 15) {
 			Body.setVelocity(ball, { x: x - 2, y });
 		} else {
 			Body.setVelocity(ball, { x: x - 10, y });
 		}
 	}
 	if (event.key === 'd') {
-		if (cells > 15) {
+		if (cellsVertical > 15) {
 			Body.setVelocity(ball, { x: x + 2, y });
 		} else {
 			Body.setVelocity(ball, { x: x + 10, y });
@@ -183,19 +188,17 @@ document.addEventListener('keydown', (event) => {
 	}
 });
 
-
-
 //Win condition
-Events.on(engine, 'collisionStart', event => {
+Events.on(engine, 'collisionStart', (event) => {
 	event.pairs.forEach((collision) => {
-		const labels = ['ball', 'goal']
-		if(labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)){
-			world.gravity.y = 1
+		const labels = [ 'ball', 'goal' ];
+		if (labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)) {
+			world.gravity.y = 1;
 			world.bodies.forEach((body) => {
-				if(body.label === 'wall'){
-					Body.setStatic(body, false)
+				if (body.label === 'wall') {
+					Body.setStatic(body, false);
 				}
-			})
+			});
 		}
-	})
-})
+	});
+});
